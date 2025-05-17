@@ -37,7 +37,7 @@ public class ConversorController {
             throw new BadRequestException("Missing information");
         }
         String contentType = service.targetContentType(target, file.getOriginalFilename());
-        File convertedFile = service.convertSingleFile(file, target);
+        File convertedFile = service.convertSingleFile(file, target, contentType);
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename = converted."+target+";")
                 .header("Content-Type", contentType)
@@ -58,13 +58,15 @@ public class ConversorController {
         if (files.length < 1 || target == null) {
             throw new BadRequestException("Missing information");
         }
-        File zip = service.convertManyAndZip(files, target);
-        
+
+        File zip = service.convertManyAndZip(files, target, service.targetContentType(target, "."+target));
+        byte[] zipBytes = new FileInputStream(zip).readAllBytes();
+        zip.delete(); 
         return ResponseEntity
             .ok()
             .header("Content-Type", "application/zip")
             .header("Content-Disposition", " attachment; filename = convertedFiles.zip;")
-            .body(new FileInputStream(zip).readAllBytes());
+            .body(zipBytes);
 
     }
 
